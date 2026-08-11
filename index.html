@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EarnHub</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; }
+    .card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <h1>EarnHub</h1>
+
+  <!-- Auth Section -->
+  <div id="auth-section" class="card">
+    <h2>Sign Up / Log In</h2>
+    <input type="email" id="email" placeholder="Email address" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button id="signup-btn">Sign Up</button>
+    <button id="login-btn">Log In</button>
+  </div>
+
+  <!-- User Dashboard Section -->
+  <div id="dashboard-section" class="card hidden">
+    <h2>Welcome!</h2>
+    <p><strong>User ID:</strong> <span id="user-uid"></span></p>
+    <p><strong>Points:</strong> <span id="user-points">0</span></p>
+    <p><strong>Tier:</strong> <span id="user-tier">1</span></p>
+    <p><strong>Ads Watched:</strong> <span id="user-ads">0</span></p>
+    
+    <button id="watch-ad-btn">Watch Ad (+10 Points)</button>
+    <button id="logout-btn" style="background-color: #dc3545;">Log Out</button>
+  </div>
+
+  <!-- Firebase SDKs (Modular CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      onAuthStateChanged, 
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      onSnapshot, 
+      updateDoc, 
+      increment 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG KEYS
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBhmzEHpEZkcuUclcdU_je5PMGLt1dwRHA",
+  authDomain: "earn-34d99.firebaseapp.com",
+  projectId: "earn-34d99",
+  storageBucket: "earn-34d99.firebasestorage.app",
+  messagingSenderId: "373566973450",
+  appId: "1:373566973450:web:7d46cf8a6001e71d5e61f3",
+  measurementId: "G-V3N00ENX2B"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUserDocUnsub = null;
+
+    // --- Auth Listener ---
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("auth-section").classList.add("hidden");
+        document.getElementById("dashboard-section").classList.remove("hidden");
+        document.getElementById("user-uid").innerText = user.uid;
+
+        // Listen for real-time changes to the user document
+        const userRef = doc(db, "users", user.uid);
+        currentUserDocUnsub = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            document.getElementById("user-points").innerText = data.points || 0;
+            document.getElementById("user-tier").innerText = data.tier || 1;
+            document.getElementById("user-ads").innerText = data.adsWatched || 0;
+          }
+        });
+
+      } else {
+        if (currentUserDocUnsub) currentUserDocUnsub();
+        document.getElementById("auth-section").classList.remove("hidden");
+        document.getElementById("dashboard-section").classList.add("hidden");
+      }
+    });
+
+    // --- Sign Up ---
+    document.getElementById("signup-btn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        // Create initial profile in Firestore
+        await setDoc(doc(db, "users", res.user.uid), {
+          email: email,
+          points: 0,
+          tier: 1,
+          adsWatched: 0,
+          createdAt: new Date()
+        });
+        alert("Account created successfully!");
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // --- Log In ---
+    document.getElementById("login-btn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // --- Log Out ---
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      signOut(auth);
+    });
+
+    // --- Simulated Ad Completion ---
+    document.getElementById("watch-ad-btn").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const userRef = doc(db, "users", user.uid);
+      try {
+        await updateDoc(userRef, {
+          points: increment(10),
+          adsWatched: increment(1)
+        });
+      } catch (err) {
+        alert("Could not update points: " + err.message);
+      }
+    });
+  </script>
+</body>
+  </html>
