@@ -267,12 +267,12 @@
     const SUPABASE_URL = "https://jdwhdbsangnmuqhzedur.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd2hkYnNhbmdubXVxaHplZHVyIiwicm9sZSI6ImFub24iXSwiaWF0IjoxNzg4OTY4NTc0LCJleHAiOjIxMDQ1NDQ1NzR9.MJ0kx7Z7A02Wks2vseBvtRDFt6gdhzRuTYgaoeG1_go";
 
-    let supabase = null;
+    let supabaseClient = null;
 
     // Initialize Supabase client safely
     try {
       if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       } else {
         console.error("Supabase CDN failed to load.");
       }
@@ -287,9 +287,9 @@
     let adCountdownTimer = null;
 
     window.addEventListener('DOMContentLoaded', async () => {
-      if (!supabase) return;
+      if (!supabaseClient) return;
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
           state.user = session.user;
           renderAppUI();
@@ -321,7 +321,7 @@
 
       alertBox.style.display = 'none';
 
-      if (!supabase) {
+      if (!supabaseClient) {
         alertBox.innerText = 'Error: Unable to connect to authentication servers. Please refresh.';
         alertBox.style.display = 'block';
         return;
@@ -338,7 +338,7 @@
 
       try {
         if (authMode === 'signup') {
-          const { data, error } = await supabase.auth.signUp({
+          const { data, error } = await supabaseClient.auth.signUp({
             email: email,
             password: password,
             options: { data: { full_name: fullName || 'ORC Member' } }
@@ -358,7 +358,7 @@
             switchAuthMode('login');
           }
         } else {
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: email,
             password: password
           });
@@ -383,7 +383,7 @@
     }
 
     async function handleSignOut() {
-      if (supabase) await supabase.auth.signOut();
+      if (supabaseClient) await supabaseClient.auth.signOut();
       state.user = null;
       document.getElementById('authModal').style.display = 'flex';
       document.getElementById('app-container').classList.remove('authenticated');
