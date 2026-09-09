@@ -264,8 +264,8 @@
 
   <script>
     // --- SUPABASE CLIENT INITIALIZATION ---
-    const SUPABASE_URL = "https://jdwhdbsangnmuqhzedur.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd2hkYnNhbmdubXVxaHplZHVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njg1NzQsImV4cCI6MjEwNDU0NDU3NH0.MJ0kx7Z7A02Wks2vseBvtRDFt6gdhzRuTYgaoeG1_go";
+    const SUPABASE_URL = "https://efhnbxjiimvavgdqftml.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmaG5ieGppaW12YXZnZHFmdG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5ODQwNjgsImV4cCI6MjEwNDU2MDA2OH0.e4t8LVj3rCJXrU6espjRQDkiyjpjAC7L-XqvTEfiA_g";
 
     let supabaseClient = null;
 
@@ -292,12 +292,44 @@
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
           state.user = session.user;
+          await loadProfile();
           renderAppUI();
         }
       } catch (err) {
         console.log("Session restore skipped:", err);
       }
     });
+
+    // Fetches this user's balance/streak from the profiles table
+    async function loadProfile() {
+      if (!supabaseClient || !state.user) return;
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('balance, streak, full_name')
+        .eq('id', state.user.id)
+        .single();
+
+      if (error) {
+        console.error('Failed to load profile:', error.message);
+        return;
+      }
+      if (data) {
+        state.balance = data.balance;
+        state.streak = data.streak;
+        if (data.full_name) state.fullName = data.full_name;
+      }
+    }
+
+    // Writes the current balance back to the profiles table
+    async function saveBalance() {
+      if (!supabaseClient || !state.user) return;
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ balance: state.balance, updated_at: new Date().toISOString() })
+        .eq('id', state.user.id);
+
+      if (error) console.error('Failed to save balance:', error.message);
+    }
 
     function switchAuthMode(mode) {
       authMode = mode;
@@ -352,6 +384,7 @@
             alertBox.style.display = 'block';
           } else if (data.session) {
             state.user = data.user;
+            await loadProfile();
             renderAppUI();
           } else {
             alert('Account created! You can now click "Sign In" with your email and password.');
@@ -371,6 +404,7 @@
             alertBox.style.display = 'block';
           } else {
             state.user = data.user;
+            await loadProfile();
             renderAppUI();
           }
         }
@@ -384,7 +418,11 @@
 
     async function handleSignOut() {
       if (supabaseClient) await supabaseClient.auth.signOut();
-      state.user = null;
+      state = { user: null, balance: 1200, streak: 3 };
+      document.getElementById('authEmail').value = '';
+      document.getElementById('authPassword').value = '';
+      document.getElementById('authFullName').value = '';
+      switchAuthMode('login');
       document.getElementById('authModal').style.display = 'flex';
       document.getElementById('app-container').classList.remove('authenticated');
     }
@@ -393,7 +431,7 @@
       document.getElementById('authModal').style.display = 'none';
       document.getElementById('app-container').classList.add('authenticated');
       
-      const displayName = state.user?.user_metadata?.full_name || state.user?.email?.split('@')[0] || 'User';
+      const displayName = state.fullName || state.user?.user_metadata?.full_name || state.user?.email?.split('@')[0] || 'User';
       document.getElementById('userNameDisplay').innerText = displayName;
       updateStatsUI();
     }
@@ -432,10 +470,11 @@
       }, 1000);
     }
 
-    function completeAdView() {
+    async function completeAdView() {
       document.getElementById('adModal').style.display = 'none';
       state.balance += activeReward;
       updateStatsUI();
+      await saveBalance();
       alert(`🎉 Verified impression! +${activeReward} ORC credited.`);
     }
 
@@ -447,7 +486,7 @@
       document.getElementById('calcOutput').innerText = `You will receive: GHS ${(val / 200).toFixed(2)}`;
     }
 
-    function processWithdrawal() {
+    async function processWithdrawal() {
       const amount = parseInt(document.getElementById('withdrawInput').value);
       const phone = document.getElementById('withdrawPhone').value.trim();
 
@@ -457,6 +496,7 @@
 
       state.balance -= amount;
       updateStatsUI();
+      await saveBalance();
       closeWithdrawModal();
       alert(`✅ Withdrawal request for ${amount} ORC submitted!`);
     }
