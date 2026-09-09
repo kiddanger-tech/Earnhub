@@ -43,7 +43,6 @@
       overflow-x: hidden;
     }
 
-    /* App Container visibility */
     #app-container { display: none; width: 100%; min-height: 100vh; }
     #app-container.authenticated { display: flex; }
 
@@ -68,19 +67,16 @@
       min-width: 0; 
     }
 
-    /* Navigation */
     .brand { font-size: 1.15rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 6px; }
     .nav-group { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
     .nav-item { padding: 0.6rem 0.8rem; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
     .nav-item.active, .nav-item:hover { background: var(--accent-blue); color: #fff; }
 
-    /* Compact Top Stats Grid */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem; margin-bottom: 1.25rem; }
     .card { background: var(--bg-card); padding: 1rem 1.15rem; border-radius: 12px; border: 1px solid var(--border-color); }
     .card-title { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 0.25rem; }
     .card-value { font-size: 1.25rem; font-weight: 700; }
 
-    /* Ad Grid & Display Boxes */
     .ad-container-box {
       background: #000;
       border: 1px dashed var(--accent-cyan);
@@ -101,7 +97,6 @@
     .boost-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-blue); }
     .boost-badge { background: rgba(37, 99, 235, 0.2); color: var(--accent-cyan); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.68rem; font-weight: 700; width: fit-content; }
 
-    /* Buttons & Controls */
     .btn { padding: 0.6rem 1rem; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: transform 0.1s, background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 6px; }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -113,20 +108,16 @@
 
     .theme-toggle { padding: 0.5rem; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem; }
 
-    /* Modal Styling */
-    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
+    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
     .modal { background: var(--bg-card); padding: 1.5rem; border-radius: 16px; width: 90%; max-width: 440px; border: 1px solid var(--border-color); }
     .form-group { margin: 1rem 0; }
     .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; }
     .form-input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); font-size: 0.9rem; outline: none; }
 
-    /* Auth Modal Tabs */
-    #authModal { display: flex; }
     .auth-tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem; padding-bottom: 0.5rem; }
     .auth-tab { cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
     .auth-tab.active { color: var(--accent-cyan); border-bottom: 2px solid var(--accent-cyan); }
 
-    /* View Sections */
     .tab-view { display: none; }
     .tab-view.active { display: block; }
 
@@ -146,7 +137,7 @@
         <div class="auth-tab" id="tabSignup" onclick="switchAuthMode('signup')">Create Account</div>
       </div>
 
-      <div id="authAlert" style="display:none; font-size: 0.8rem; color: #ef4444; margin-bottom: 0.8rem;"></div>
+      <div id="authAlert" style="display:none; font-size: 0.85rem; padding: 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: #ef4444; margin-bottom: 0.8rem; border: 1px solid #ef4444;"></div>
 
       <div class="form-group" id="groupFullName" style="display: none;">
         <label>Full Name</label>
@@ -163,7 +154,7 @@
         <input type="password" class="form-input" id="authPassword" placeholder="••••••••">
       </div>
 
-      <button class="btn btn-primary btn-block" style="margin-top: 1rem;" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign In</button>
+      <button type="button" class="btn btn-primary btn-block" style="margin-top: 1rem;" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign In</button>
     </div>
   </div>
 
@@ -197,7 +188,6 @@
         </div>
       </section>
 
-      <!-- Dashboard View -->
       <section id="view-dashboard" class="tab-view active">
         <div class="card">
           <h3 style="font-size: 1.1rem;">Welcome back, <span id="userNameDisplay">User</span>!</h3>
@@ -206,7 +196,6 @@
         </div>
       </section>
 
-      <!-- Watch Ads View -->
       <section id="view-ads" class="tab-view">
         <div class="card">
           <h3 style="font-size: 1.1rem;">Verified Network Ads</h3>
@@ -220,7 +209,6 @@
         </div>
       </section>
 
-      <!-- Ad Boost View -->
       <section id="view-boost" class="tab-view">
         <h3 style="font-size: 1.1rem;">🚀 Ad Boost Multipliers</h3>
         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Watch ad sets sequentially to unlock bonus payouts.</p>
@@ -264,7 +252,6 @@
         </div>
       </section>
 
-      <!-- Wallet View -->
       <section id="view-wallet" class="tab-view">
         <div class="card">
           <h3 style="font-size: 1.1rem;">Your Wallet</h3>
@@ -275,82 +262,43 @@
     </main>
   </div>
 
-  <!-- Ad Player Overlay -->
-  <div class="modal-overlay" id="adModal">
-    <div class="modal" style="text-align: center;">
-      <h4 style="font-size: 1rem;" id="adModalTitle">Sponsored Impression Loading...</h4>
-      <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0.4rem 0 1rem 0;" id="adModalTimer">Please wait 5s to claim reward</p>
-      
-      <div style="background: #000; width: 100%; height: 180px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);" id="adPlayerFrame">
-        <span style="color: var(--accent-cyan); font-weight: 600;">[ Ad Network Video Frame ]</span>
-      </div>
-
-      <button class="btn btn-primary btn-block" style="margin-top: 1.25rem;" id="closeAdBtn" disabled onclick="completeAdView()">Watching...</button>
-    </div>
-  </div>
-
-  <!-- Withdrawal Modal -->
-  <div class="modal-overlay" id="withdrawModal">
-    <div class="modal">
-      <h4 style="font-size: 1rem;">Request Payout</h4>
-      <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">Funds sent directly via Mobile Money.</p>
-
-      <div class="form-group">
-        <label>ORC Amount to Cash Out</label>
-        <input type="number" class="form-input" id="withdrawInput" placeholder="Min 1000" oninput="calculateGHS()">
-        <p style="font-size: 0.75rem; color: var(--accent-green); margin-top: 0.3rem;" id="calcOutput">You will receive: GHS 0.00</p>
-      </div>
-
-      <div class="form-group">
-        <label>Mobile Money Network</label>
-        <select class="form-input" id="withdrawMethod">
-          <option value="MTN Mobile Money">MTN Mobile Money</option>
-          <option value="Telecel Cash">Telecel Cash</option>
-          <option value="AT Money">AT Money</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input type="tel" class="form-input" id="withdrawPhone" placeholder="05XXXXXXXX">
-      </div>
-
-      <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
-        <button class="btn btn-block" style="background: var(--border-color); color: var(--text-main);" onclick="closeWithdrawModal()">Cancel</button>
-        <button class="btn btn-success btn-block" onclick="processWithdrawal()">Submit</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // --- SUPABASE CLIENT INITIALIZATION ---
     const SUPABASE_URL = "https://jdwhdbsangnmuqhzedur.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd2hkYnNhbmdubXVxaHplZHVyIiwicm9sZSI6ImFub24iXSwiaWF0IjoxNzg4OTY4NTc0LCJleHAiOjIxMDQ1NDQ1NzR9.MJ0kx7Z7A02Wks2vseBvtRDFt6gdhzRuTYgaoeG1_go";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabase = null;
 
-    // --- STATE MANAGEMENT ---
-    let state = {
-      user: null,
-      balance: 1200,
-      streak: 3
-    };
+    // Initialize Supabase client safely
+    try {
+      if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } else {
+        console.error("Supabase CDN failed to load.");
+      }
+    } catch(err) {
+      console.error("Supabase init error:", err);
+    }
 
+    let state = { user: null, balance: 1200, streak: 3 };
     let authMode = 'login'; 
     let activeReward = 0;
     let activeSource = '';
     let adCountdownTimer = null;
 
-    // Check session on load
     window.addEventListener('DOMContentLoaded', async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        state.user = session.user;
-        renderAppUI();
+      if (!supabase) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          state.user = session.user;
+          renderAppUI();
+        }
+      } catch (err) {
+        console.log("Session restore skipped:", err);
       }
     });
 
-    // --- AUTHENTICATION FUNCTIONS ---
     function switchAuthMode(mode) {
       authMode = mode;
       document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
@@ -361,13 +309,23 @@
     }
 
     async function handleAuthSubmit() {
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value.trim();
-      const fullName = document.getElementById('authFullName').value.trim();
+      const emailEl = document.getElementById('authEmail');
+      const passwordEl = document.getElementById('authPassword');
+      const fullNameEl = document.getElementById('authFullName');
       const alertBox = document.getElementById('authAlert');
       const submitBtn = document.getElementById('authSubmitBtn');
 
+      const email = emailEl ? emailEl.value.trim() : '';
+      const password = passwordEl ? passwordEl.value.trim() : '';
+      const fullName = fullNameEl ? fullNameEl.value.trim() : '';
+
       alertBox.style.display = 'none';
+
+      if (!supabase) {
+        alertBox.innerText = 'Error: Unable to connect to authentication servers. Please refresh.';
+        alertBox.style.display = 'block';
+        return;
+      }
 
       if (!email || !password) {
         alertBox.innerText = 'Please enter both email and password.';
@@ -376,50 +334,56 @@
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerText = 'Processing...';
+      submitBtn.innerText = 'Connecting...';
 
-      if (authMode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: { full_name: fullName || 'ORC Member' }
+      try {
+        if (authMode === 'signup') {
+          const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: { data: { full_name: fullName || 'ORC Member' } }
+          });
+
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Create Account';
+
+          if (error) {
+            alertBox.innerText = error.message;
+            alertBox.style.display = 'block';
+          } else if (data.session) {
+            state.user = data.user;
+            renderAppUI();
+          } else {
+            alert('Account created! You can now click "Sign In" with your email and password.');
+            switchAuthMode('login');
           }
-        });
-
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'Create Account';
-
-        if (error) {
-          alertBox.innerText = error.message;
-          alertBox.style.display = 'block';
-        } else if (data.session) {
-          state.user = data.user;
-          renderAppUI();
         } else {
-          alert('Account created! If confirm email is enabled in Supabase, please verify your inbox. Otherwise, turn off "Confirm Email" under Authentication -> Providers -> Email.');
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
 
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Sign In';
+
+          if (error) {
+            alertBox.innerText = error.message;
+            alertBox.style.display = 'block';
+          } else {
+            state.user = data.user;
+            renderAppUI();
+          }
+        }
+      } catch (err) {
         submitBtn.disabled = false;
-        submitBtn.innerText = 'Sign In';
-
-        if (error) {
-          alertBox.innerText = error.message;
-          alertBox.style.display = 'block';
-        } else {
-          state.user = data.user;
-          renderAppUI();
-        }
+        submitBtn.innerText = authMode === 'login' ? 'Sign In' : 'Create Account';
+        alertBox.innerText = 'Unexpected error: ' + err.message;
+        alertBox.style.display = 'block';
       }
     }
 
     async function handleSignOut() {
-      await supabase.auth.signOut();
+      if (supabase) await supabase.auth.signOut();
       state.user = null;
       document.getElementById('authModal').style.display = 'flex';
       document.getElementById('app-container').classList.remove('authenticated');
@@ -440,7 +404,6 @@
       document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} Days`;
     }
 
-    // --- AD VIEW ENGINE ---
     function triggerAdView(rewardAmount, durationSeconds, source) {
       activeReward = rewardAmount;
       activeSource = source;
@@ -476,7 +439,6 @@
       alert(`🎉 Verified impression! +${activeReward} ORC credited.`);
     }
 
-    // --- WITHDRAWALS ---
     function openWithdrawModal() { document.getElementById('withdrawModal').style.display = 'flex'; }
     function closeWithdrawModal() { document.getElementById('withdrawModal').style.display = 'none'; }
 
@@ -499,7 +461,6 @@
       alert(`✅ Withdrawal request for ${amount} ORC submitted!`);
     }
 
-    // Navigation and UI
     function switchTab(viewName, element) {
       document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
