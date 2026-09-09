@@ -1,168 +1,516 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EarnHub</title>
+  <title>ORC Rewards | Dashboard</title>
+  
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; }
-    .card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
-    button { background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-    .hidden { display: none; }
+    :root {
+      --bg-primary: #0b1329;
+      --bg-card: #152238;
+      --bg-card-hover: #1e2d4a;
+      --text-main: #f0f6fc;
+      --text-muted: #8b9eb7;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-orange: #f97316;
+      --border-color: #24344d;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #eff6ff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    
+    body { 
+      background-color: var(--bg-primary); 
+      color: var(--text-main); 
+      display: flex; 
+      min-height: 100vh; 
+      width: 100vw;
+      overflow-x: hidden;
+    }
+
+    /* App Container visibility */
+    #app-container { display: none; width: 100%; min-height: 100vh; }
+    #app-container.authenticated { display: flex; }
+
+    .sidebar { 
+      width: 220px; 
+      min-width: 220px; 
+      background: var(--bg-card); 
+      border-right: 1px solid var(--border-color); 
+      padding: 1rem; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .main-content { 
+      flex: 1; 
+      padding: 1.25rem; 
+      overflow-y: auto; 
+      min-width: 0; 
+    }
+
+    /* Navigation */
+    .brand { font-size: 1.15rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 6px; }
+    .nav-group { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
+    .nav-item { padding: 0.6rem 0.8rem; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+    .nav-item.active, .nav-item:hover { background: var(--accent-blue); color: #fff; }
+
+    /* Compact Top Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem; margin-bottom: 1.25rem; }
+    .card { background: var(--bg-card); padding: 1rem 1.15rem; border-radius: 12px; border: 1px solid var(--border-color); }
+    .card-title { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 0.25rem; }
+    .card-value { font-size: 1.25rem; font-weight: 700; }
+
+    /* Ad Grid & Display Boxes */
+    .ad-container-box {
+      background: #000;
+      border: 1px dashed var(--accent-cyan);
+      border-radius: 12px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 1rem;
+      position: relative;
+    }
+
+    .boost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 0.85rem; }
+    .boost-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.15rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; position: relative; overflow: hidden; }
+    .boost-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-blue); }
+    .boost-badge { background: rgba(37, 99, 235, 0.2); color: var(--accent-cyan); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.68rem; font-weight: 700; width: fit-content; }
+
+    /* Buttons & Controls */
+    .btn { padding: 0.6rem 1rem; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: transform 0.1s, background 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 6px; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent-blue); color: #fff; }
+    .btn-primary:hover { background: var(--accent-blue-hover); }
+    .btn-success { background: var(--accent-green); color: #fff; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-block { width: 100%; }
+
+    .theme-toggle { padding: 0.5rem; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600; font-size: 0.8rem; margin-bottom: 0.5rem; }
+
+    /* Modal Styling */
+    .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
+    .modal { background: var(--bg-card); padding: 1.5rem; border-radius: 16px; width: 90%; max-width: 440px; border: 1px solid var(--border-color); }
+    .form-group { margin: 1rem 0; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .form-input { width: 100%; padding: 0.65rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main); font-size: 0.9rem; outline: none; }
+
+    /* Auth Modal Tabs */
+    #authModal { display: flex; }
+    .auth-tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem; padding-bottom: 0.5rem; }
+    .auth-tab { cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+    .auth-tab.active { color: var(--accent-cyan); border-bottom: 2px solid var(--accent-cyan); }
+
+    /* View Sections */
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
+    @media (max-width: 768px) {
+      #app-container.authenticated { flex-direction: column; }
+      .sidebar { width: 100%; min-width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border-color); }
+    }
   </style>
 </head>
 <body>
 
-  <h1>EarnHub</h1>
+  <!-- AUTHENTICATION OVERLAY MODAL -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tabLogin" onclick="switchAuthMode('login')">Sign In</div>
+        <div class="auth-tab" id="tabSignup" onclick="switchAuthMode('signup')">Create Account</div>
+      </div>
 
-  <!-- Auth Section -->
-  <div id="auth-section" class="card">
-    <h2>Sign Up / Log In</h2>
-    <input type="email" id="email" placeholder="Email address" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button id="signup-btn">Sign Up</button>
-    <button id="login-btn">Log In</button>
+      <div id="authAlert" style="display:none; font-size: 0.8rem; color: #ef4444; margin-bottom: 0.8rem;"></div>
+
+      <div class="form-group" id="groupFullName" style="display: none;">
+        <label>Full Name</label>
+        <input type="text" class="form-input" id="authFullName" placeholder="e.g. Michael Bonsu">
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" class="form-input" id="authEmail" placeholder="yourname@gmail.com">
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" class="form-input" id="authPassword" placeholder="••••••••">
+      </div>
+
+      <button class="btn btn-primary btn-block" style="margin-top: 1rem;" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign In</button>
+    </div>
   </div>
 
-  <!-- User Dashboard Section -->
-  <div id="dashboard-section" class="card hidden">
-    <h2>Welcome!</h2>
-    <p><strong>User ID:</strong> <span id="user-uid"></span></p>
-    <p><strong>Points:</strong> <span id="user-points">0</span></p>
-    <p><strong>Tier:</strong> <span id="user-tier">1</span></p>
-    <p><strong>Ads Watched:</strong> <span id="user-ads">0</span></p>
-    
-    <button id="watch-ad-btn">Watch Ad (+10 Points)</button>
-    <button id="logout-btn" style="background-color: #dc3545;">Log Out</button>
+  <!-- DASHBOARD APPLICATION -->
+  <div id="app-container">
+    <aside class="sidebar">
+      <div class="brand">🔵 ORC Rewards</div>
+      <div class="nav-group">
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">📊 Dashboard</div>
+        <div class="nav-item" onclick="switchTab('ads', this)">📺 Watch Ads</div>
+        <div class="nav-item" onclick="switchTab('boost', this)">🚀 Ad Boost</div>
+        <div class="nav-item" onclick="switchTab('wallet', this)">💳 Wallet & Payout</div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+      <button class="btn btn-danger btn-block" onclick="handleSignOut()">Sign Out</button>
+    </aside>
+
+    <main class="main-content">
+      <section class="stats-grid">
+        <div class="card">
+          <div class="card-title">ORC Balance</div>
+          <div class="card-value" id="orcBalanceDisplay">1,200 ORC</div>
+        </div>
+        <div class="card">
+          <div class="card-title">GHS Equivalent</div>
+          <div class="card-value" style="color: var(--accent-green);" id="ghsBalanceDisplay">GHS 6.00</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Streak</div>
+          <div class="card-value" style="color: var(--accent-orange);" id="streakDisplay">🔥 3 Days</div>
+        </div>
+      </section>
+
+      <!-- Dashboard View -->
+      <section id="view-dashboard" class="tab-view active">
+        <div class="card">
+          <h3 style="font-size: 1.1rem;">Welcome back, <span id="userNameDisplay">User</span>!</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.4rem 0 1rem 0;">Ready to earn today? Go to the Watch Ads tab to view eligible promotional videos.</p>
+          <button class="btn btn-primary" onclick="switchTab('ads', document.querySelectorAll('.nav-item')[1])">📺 Start Watching Ads</button>
+        </div>
+      </section>
+
+      <!-- Watch Ads View -->
+      <section id="view-ads" class="tab-view">
+        <div class="card">
+          <h3 style="font-size: 1.1rem;">Verified Network Ads</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.3rem;">Watch sponsor ads completely to collect ORC rewards.</p>
+
+          <div class="ad-container-box">
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.8rem;" id="adStatusText">Ad Slot Ready</p>
+            <div id="adNetworkSlot"><span style="font-size: 2.5rem;">📺</span></div>
+            <button class="btn btn-primary" style="margin-top: 1rem;" id="startAdBtn" onclick="triggerAdView(50, 5, 'Single Ad Watched')">Play Ad (+50 ORC)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ad Boost View -->
+      <section id="view-boost" class="tab-view">
+        <h3 style="font-size: 1.1rem;">🚀 Ad Boost Multipliers</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Watch ad sets sequentially to unlock bonus payouts.</p>
+
+        <div class="boost-grid">
+          <div class="boost-card">
+            <div>
+              <span class="boost-badge">TIER 1</span>
+              <h4 style="margin-top:0.4rem; font-size: 0.95rem;">Starter Pack</h4>
+              <p style="color: var(--text-muted); font-size: 0.8rem;">Watch 1 ad for baseline reward.</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 1rem; color: var(--accent-green);">40 ORC</p>
+              <button class="btn btn-primary btn-block" style="margin-top: 0.5rem;" onclick="triggerAdView(40, 5, 'Tier 1 Boost')">Claim Tier 1</button>
+            </div>
+          </div>
+
+          <div class="boost-card">
+            <div>
+              <span class="boost-badge">TIER 2 (+20 BONUS)</span>
+              <h4 style="margin-top:0.4rem; font-size: 0.95rem;">Triple Watch</h4>
+              <p style="color: var(--text-muted); font-size: 0.8rem;">Watch 3 ads sequentially.</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 1rem; color: var(--accent-green);">140 ORC</p>
+              <button class="btn btn-primary btn-block" style="margin-top: 0.5rem;" onclick="triggerAdView(140, 10, 'Tier 2 Boost')">Claim Tier 2</button>
+            </div>
+          </div>
+
+          <div class="boost-card">
+            <div>
+              <span class="boost-badge">TIER 3 (+50 BONUS)</span>
+              <h4 style="margin-top:0.4rem; font-size: 0.95rem;">5-Ad Streak</h4>
+              <p style="color: var(--text-muted); font-size: 0.8rem;">Watch 5 ads back-to-back.</p>
+            </div>
+            <div>
+              <p style="font-weight: 700; font-size: 1rem; color: var(--accent-green);">250 ORC</p>
+              <button class="btn btn-primary btn-block" style="margin-top: 0.5rem;" onclick="triggerAdView(250, 15, 'Tier 3 Boost')">Claim Tier 3</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Wallet View -->
+      <section id="view-wallet" class="tab-view">
+        <div class="card">
+          <h3 style="font-size: 1.1rem;">Your Wallet</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.4rem 0 1rem 0;">Conversion Rate: <strong>200 ORC = 1 GHS</strong> (Min withdrawal: 1,000 ORC)</p>
+          <button class="btn btn-success" onclick="openWithdrawModal()">💸 Request Withdrawal</button>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <!-- Firebase SDKs (Modular CDN) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getAuth, 
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword, 
-      onAuthStateChanged, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      onSnapshot, 
-      updateDoc, 
-      increment 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <!-- Ad Player Overlay -->
+  <div class="modal-overlay" id="adModal">
+    <div class="modal" style="text-align: center;">
+      <h4 style="font-size: 1rem;" id="adModalTitle">Sponsored Impression Loading...</h4>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0.4rem 0 1rem 0;" id="adModalTimer">Please wait 5s to claim reward</p>
+      
+      <div style="background: #000; width: 100%; height: 180px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);" id="adPlayerFrame">
+        <span style="color: var(--accent-cyan); font-weight: 600;">[ Ad Network Video Frame ]</span>
+      </div>
 
-    // REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG KEYS
-    // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+      <button class="btn btn-primary btn-block" style="margin-top: 1.25rem;" id="closeAdBtn" disabled onclick="completeAdView()">Watching...</button>
+    </div>
+  </div>
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBhmzEHpEZkcuUclcdU_je5PMGLt1dwRHA",
-  authDomain: "earn-34d99.firebaseapp.com",
-  projectId: "earn-34d99",
-  storageBucket: "earn-34d99.firebasestorage.app",
-  messagingSenderId: "373566973450",
-  appId: "1:373566973450:web:7d46cf8a6001e71d5e61f3",
-  measurementId: "G-V3N00ENX2B"
-};
+  <!-- Withdrawal Modal -->
+  <div class="modal-overlay" id="withdrawModal">
+    <div class="modal">
+      <h4 style="font-size: 1rem;">Request Payout</h4>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.2rem;">Funds sent directly via Mobile Money.</p>
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+      <div class="form-group">
+        <label>ORC Amount to Cash Out</label>
+        <input type="number" class="form-input" id="withdrawInput" placeholder="Min 1000" oninput="calculateGHS()">
+        <p style="font-size: 0.75rem; color: var(--accent-green); margin-top: 0.3rem;" id="calcOutput">You will receive: GHS 0.00</p>
+      </div>
+
+      <div class="form-group">
+        <label>Mobile Money Network</label>
+        <select class="form-input" id="withdrawMethod">
+          <option value="MTN Mobile Money">MTN Mobile Money</option>
+          <option value="Telecel Cash">Telecel Cash</option>
+          <option value="AT Money">AT Money</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" class="form-input" id="withdrawPhone" placeholder="05XXXXXXXX">
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+        <button class="btn btn-block" style="background: var(--border-color); color: var(--text-main);" onclick="closeWithdrawModal()">Cancel</button>
+        <button class="btn btn-success btn-block" onclick="processWithdrawal()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- SUPABASE CLIENT INITIALIZATION ---
+    const SUPABASE_URL = "https://jdwhdbsangnmuqhzedur.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impkd2hkYnNhbmdubXVxaHplZHVyIiwicm9sZSI6ImFub24iXSwiaWF0IjoxNzg4OTY4NTc0LCJleHAiOjIxMDQ1NDQ1NzR9.MJ0kx7Z7A02Wks2vseBvtRDFt6gdhzRuTYgaoeG1_go";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- STATE MANAGEMENT ---
+    let state = {
+      user: null,
+      balance: 1200,
+      streak: 3
     };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    let authMode = 'login'; 
+    let activeReward = 0;
+    let activeSource = '';
+    let adCountdownTimer = null;
 
-    let currentUserDocUnsub = null;
+    // Check session on load
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        state.user = session.user;
+        renderAppUI();
+      }
+    });
 
-    // --- Auth Listener ---
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("auth-section").classList.add("hidden");
-        document.getElementById("dashboard-section").classList.remove("hidden");
-        document.getElementById("user-uid").innerText = user.uid;
+    // --- AUTHENTICATION FUNCTIONS ---
+    function switchAuthMode(mode) {
+      authMode = mode;
+      document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+      document.getElementById('groupFullName').style.display = mode === 'signup' ? 'block' : 'none';
+      document.getElementById('authSubmitBtn').innerText = mode === 'login' ? 'Sign In' : 'Create Account';
+      document.getElementById('authAlert').style.display = 'none';
+    }
 
-        // Listen for real-time changes to the user document
-        const userRef = doc(db, "users", user.uid);
-        currentUserDocUnsub = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            document.getElementById("user-points").innerText = data.points || 0;
-            document.getElementById("user-tier").innerText = data.tier || 1;
-            document.getElementById("user-ads").innerText = data.adsWatched || 0;
+    async function handleAuthSubmit() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      const fullName = document.getElementById('authFullName').value.trim();
+      const alertBox = document.getElementById('authAlert');
+      const submitBtn = document.getElementById('authSubmitBtn');
+
+      alertBox.style.display = 'none';
+
+      if (!email || !password) {
+        alertBox.innerText = 'Please enter both email and password.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Processing...';
+
+      if (authMode === 'signup') {
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { full_name: fullName || 'ORC Member' }
           }
         });
 
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Create Account';
+
+        if (error) {
+          alertBox.innerText = error.message;
+          alertBox.style.display = 'block';
+        } else if (data.session) {
+          state.user = data.user;
+          renderAppUI();
+        } else {
+          alert('Account created! If confirm email is enabled in Supabase, please verify your inbox. Otherwise, turn off "Confirm Email" under Authentication -> Providers -> Email.');
+        }
       } else {
-        if (currentUserDocUnsub) currentUserDocUnsub();
-        document.getElementById("auth-section").classList.remove("hidden");
-        document.getElementById("dashboard-section").classList.add("hidden");
-      }
-    });
-
-    // --- Sign Up ---
-    document.getElementById("signup-btn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-        // Create initial profile in Firestore
-        await setDoc(doc(db, "users", res.user.uid), {
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: email,
-          points: 0,
-          tier: 1,
-          adsWatched: 0,
-          createdAt: new Date()
+          password: password
         });
-        alert("Account created successfully!");
-      } catch (err) {
-        alert(err.message);
+
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Sign In';
+
+        if (error) {
+          alertBox.innerText = error.message;
+          alertBox.style.display = 'block';
+        } else {
+          state.user = data.user;
+          renderAppUI();
+        }
       }
-    });
+    }
 
-    // --- Log In ---
-    document.getElementById("login-btn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert(err.message);
-      }
-    });
+    async function handleSignOut() {
+      await supabase.auth.signOut();
+      state.user = null;
+      document.getElementById('authModal').style.display = 'flex';
+      document.getElementById('app-container').classList.remove('authenticated');
+    }
 
-    // --- Log Out ---
-    document.getElementById("logout-btn").addEventListener("click", () => {
-      signOut(auth);
-    });
+    function renderAppUI() {
+      document.getElementById('authModal').style.display = 'none';
+      document.getElementById('app-container').classList.add('authenticated');
+      
+      const displayName = state.user?.user_metadata?.full_name || state.user?.email?.split('@')[0] || 'User';
+      document.getElementById('userNameDisplay').innerText = displayName;
+      updateStatsUI();
+    }
 
-    // --- Simulated Ad Completion ---
-    document.getElementById("watch-ad-btn").addEventListener("click", async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+    function updateStatsUI() {
+      document.getElementById('orcBalanceDisplay').innerText = `${state.balance.toLocaleString()} ORC`;
+      document.getElementById('ghsBalanceDisplay').innerText = `GHS ${(state.balance / 200).toFixed(2)}`;
+      document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} Days`;
+    }
 
-      const userRef = doc(db, "users", user.uid);
-      try {
-        await updateDoc(userRef, {
-          points: increment(10),
-          adsWatched: increment(1)
-        });
-      } catch (err) {
-        alert("Could not update points: " + err.message);
-      }
-    });
+    // --- AD VIEW ENGINE ---
+    function triggerAdView(rewardAmount, durationSeconds, source) {
+      activeReward = rewardAmount;
+      activeSource = source;
+      
+      const modal = document.getElementById('adModal');
+      const timerLabel = document.getElementById('adModalTimer');
+      const closeBtn = document.getElementById('closeAdBtn');
+      
+      modal.style.display = 'flex';
+      closeBtn.disabled = true;
+      closeBtn.innerText = 'Watching...';
+
+      let timeLeft = durationSeconds;
+      timerLabel.innerText = `Please wait ${timeLeft}s to claim reward`;
+
+      adCountdownTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          timerLabel.innerText = `Please wait ${timeLeft}s to claim reward`;
+        } else {
+          clearInterval(adCountdownTimer);
+          timerLabel.innerText = 'Ad complete! Claim your reward.';
+          closeBtn.disabled = false;
+          closeBtn.innerText = `Claim +${activeReward} ORC`;
+        }
+      }, 1000);
+    }
+
+    function completeAdView() {
+      document.getElementById('adModal').style.display = 'none';
+      state.balance += activeReward;
+      updateStatsUI();
+      alert(`🎉 Verified impression! +${activeReward} ORC credited.`);
+    }
+
+    // --- WITHDRAWALS ---
+    function openWithdrawModal() { document.getElementById('withdrawModal').style.display = 'flex'; }
+    function closeWithdrawModal() { document.getElementById('withdrawModal').style.display = 'none'; }
+
+    function calculateGHS() {
+      const val = document.getElementById('withdrawInput').value || 0;
+      document.getElementById('calcOutput').innerText = `You will receive: GHS ${(val / 200).toFixed(2)}`;
+    }
+
+    function processWithdrawal() {
+      const amount = parseInt(document.getElementById('withdrawInput').value);
+      const phone = document.getElementById('withdrawPhone').value.trim();
+
+      if(!amount || amount < 1000) return alert("Minimum withdrawal is 1,000 ORC (GHS 5.00)");
+      if(!phone) return alert("Please enter a phone number.");
+      if(amount > state.balance) return alert("Insufficient balance!");
+
+      state.balance -= amount;
+      updateStatsUI();
+      closeWithdrawModal();
+      alert(`✅ Withdrawal request for ${amount} ORC submitted!`);
+    }
+
+    // Navigation and UI
+    function switchTab(viewName, element) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${viewName}`).classList.add('active');
+      if(element) element.classList.add('active');
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    }
   </script>
 </body>
-  </html>
+</html>
