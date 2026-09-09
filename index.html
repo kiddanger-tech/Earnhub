@@ -95,8 +95,14 @@
   </div>
 
   <div class="modal-overlay" id="adModal" style="display:none;">
-    <div class="modal" style="text-align:center;">
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 0.8rem;">A new tab just opened with the ad. Keep this tab open too — come back here once it's done.</p>
+    <div class="modal" style="text-align:center; max-width: 500px;">
+      <div style="background:#000; border-radius:10px; overflow:hidden; margin-bottom: 0.5rem; min-height: 280px;">
+        <iframe id="adFrame" src="" style="width:100%; height:280px; border:0; display:block;"></iframe>
+      </div>
+      <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+        Seeing a blank box? Some ads can't display inline —
+        <a href="#" id="fallbackLink" target="_blank" style="color: var(--accent-cyan);">open it in a new tab instead</a>.
+      </p>
       <p id="adModalTimer" style="font-weight:700; margin-bottom: 1rem;">Please wait...</p>
       <button class="btn btn-success btn-block" id="closeAdBtn" onclick="completeAdView()" disabled>Waiting...</button>
     </div>
@@ -358,11 +364,15 @@
     // Step 1: open the ad, start the wait timer. No balance touched yet.
     function triggerAdView(rewardKey) {
       pendingRewardKey = rewardKey;
-      window.open(AD_DIRECT_LINK, '_blank');
 
       const modal = document.getElementById('adModal');
       const timerLabel = document.getElementById('adModalTimer');
       const closeBtn = document.getElementById('closeAdBtn');
+      const frame = document.getElementById('adFrame');
+      const fallbackLink = document.getElementById('fallbackLink');
+
+      frame.src = AD_DIRECT_LINK;
+      fallbackLink.href = AD_DIRECT_LINK;
       modal.style.display = 'flex';
       closeBtn.disabled = true;
       closeBtn.innerText = 'Waiting...';
@@ -386,6 +396,7 @@
     // The amount is never sent from here; it's looked up server-side by rewardKey.
     async function completeAdView() {
       document.getElementById('adModal').style.display = 'none';
+      document.getElementById('adFrame').src = '';
       try {
         const { data, error } = await supabaseClient.rpc('claim_reward', { p_reward_key: pendingRewardKey });
         if (error) throw error;
