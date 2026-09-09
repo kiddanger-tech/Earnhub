@@ -173,7 +173,7 @@
             <span style="font-size: 2.5rem;">📺</span>
             <button class="btn btn-primary" style="margin-top: 1rem;" id="startAdBtn" onclick="triggerAdView('single_ad')">Watch Ad</button>
           </div>
-          <p class="note">Reward amounts are set server-side (Supabase reward_rules table), not by this page — this button cannot be edited in the browser to pay out more.</p>
+          <p class="note">Reward amounts are set server-side (Supabase reward_rules table), not by this page — this button cannot be edited in the browser to pay out more. Current rate: 2 ORC per ad, calibrated conservatively against real Monetag CPM data — expect to revisit once you have live traffic numbers.</p>
         </div>
       </section>
 
@@ -211,7 +211,7 @@
       <section id="view-wallet" class="tab-view">
         <div class="card">
           <h3 style="font-size: 1.1rem;">Your Wallet</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.4rem 0 1rem 0;">Conversion Rate: <strong>200 ORC = 1 GHS</strong> (Min withdrawal: 1,000 ORC)</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.4rem 0 1rem 0;">Conversion Rate: <strong>1,000 ORC = 1 GHS</strong> (Min withdrawal: 5,000 ORC)</p>
           <button class="btn btn-success" onclick="openWithdrawModal()">💸 Request Withdrawal</button>
         </div>
       </section>
@@ -357,7 +357,7 @@
 
     function updateStatsUI() {
       document.getElementById('orcBalanceDisplay').innerText = `${state.balance.toLocaleString()} ORC`;
-      document.getElementById('ghsBalanceDisplay').innerText = `GHS ${(state.balance / 200).toFixed(2)}`;
+      document.getElementById('ghsBalanceDisplay').innerText = `GHS ${(state.balance / 1000).toFixed(2)}`;
       document.getElementById('streakDisplay').innerText = `🔥 ${state.streak} Days`;
     }
 
@@ -414,7 +414,7 @@
 
     function calculateGHS() {
       const val = document.getElementById('withdrawInput').value || 0;
-      document.getElementById('calcOutput').innerText = `You will receive: GHS ${(val / 200).toFixed(2)}`;
+      document.getElementById('calcOutput').innerText = `You will receive: GHS ${(val / 1000).toFixed(2)}`;
     }
 
     // Withdrawal amount/eligibility is re-checked server-side in request_withdrawal too.
